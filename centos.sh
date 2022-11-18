@@ -1,7 +1,7 @@
 #!/bin/sh
 
-OS="debian"
-BASE="debian:11"
+OS="centos"
+BASE="centos:7"
 IMAGE="docker-env-${OS}"
 CONTAINER="${IMAGE}_1"
 
@@ -71,28 +71,31 @@ if [ ${BUILD_IMAGE} = 1 ]; then
   docker build -t ${IMAGE} - <<EOF
 FROM ${BASE}
 
-RUN apt-get update -qq \
- && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade \
- && DEBIAN_FRONTEND=noninteractive apt-get -y install \
-      build-essential \
-      cmake \
-      curl \
-      gfortran \
+RUN yum -y update \
+ && yum -y install centos-release-scl-rh epel-release \
+ && yum -y update \
+ && yum -y install \
+      boost169-devel \
+      cmake3 \
+      devtoolset-10 \
+      eigen3-devel \
+      fftw-devel \
+      hdf5-devel \
       git \
-      libboost-all-dev \
-      libeigen3-dev \
-      libfftw3-dev \
-      libhdf5-dev \
-      liblapack-dev \
-      libopenblas-dev \
-      mpi-default-dev \
-      python3 \
-      python3-pip \
-      python3-venv \
+      lapack-devel \
+      openblas-devel \
+      patch \
+      python3-devel \
+      scalapack-openmpi-devel \
       sudo \
       vim \
       wget \
- && echo "unalias ls" >> /etc/skel/.bashrc
+ && localedef -f UTF-8 -i en_US en_US.UTF-8 \
+ && ln -s cmake3 /usr/bin/cmake \
+ && echo "unalias ls" >> /etc/skel/.bashrc \
+ && echo "export BOOST_INCLUDEDIR=/usr/include/boost169" >> /etc/skel/.bashrc \
+ && echo "export BOOST_LIBRARYDIR=/usr/lib64/boost169" >> /etc/skel/.bashrc \
+ && echo ". /opt/rh/devtoolset-10/enable" >> /etc/skel/.bashrc
 
 ARG USERNAME=${DOCKER_USERNAME}
 ARG GROUPNAME=${DOCKER_USERNAME}
@@ -100,7 +103,7 @@ ARG UID=${DOCKER_UID}
 ARG GID=${DOCKER_GID}
 ARG PASSWORD=live
 RUN groupadd -f -g \$GID \$GROUPNAME \
- && useradd -m -s /bin/bash -u \$UID -g \$GID -G sudo \$USERNAME \
+ && useradd -m -s /bin/bash -u \$UID -g \$GID \$USERNAME \
  && echo \$USERNAME:\$PASSWORD | chpasswd \
  && echo "\$USERNAME ALL=(ALL) ALL" >> /etc/sudoers
 
