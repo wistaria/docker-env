@@ -1,13 +1,11 @@
 #!/bin/sh
 
-OS="debian"
+OS="archlinux"
 DENV="docker-env"
 BASE="${OS}:latest"
 IMAGE="${DENV}-${OS}"
 CONTAINER="${IMAGE}_1"
 VOLUME="${DENV}_1"
-
-export DOCKER_CLI_HINTS=false
 
 # check docker daemon
 RES=$(docker images > /dev/null 2>&1; echo $?)
@@ -45,15 +43,6 @@ if [ ${BUILD_IMAGE} = 1 ]; then
   echo "Building building image ${IMAGE} from ${BASE}..."
   docker build -t ${IMAGE} - <<EOF
 FROM ${BASE}
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq \
- && apt-get -y install \
-      build-essential \
-      curl \
-      sudo \
-      vim \
-      wget
 
 ARG USERNAME=${DOCKER_USERNAME}
 ARG GROUPNAME=${DOCKER_USERNAME}

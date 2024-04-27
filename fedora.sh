@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OS="debian"
+OS="fedora"
 DENV="docker-env"
 BASE="${OS}:latest"
 IMAGE="${DENV}-${OS}"
@@ -46,14 +46,11 @@ if [ ${BUILD_IMAGE} = 1 ]; then
   docker build -t ${IMAGE} - <<EOF
 FROM ${BASE}
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qq \
- && apt-get -y install \
-      build-essential \
-      curl \
-      sudo \
-      vim \
-      wget
+RUN dnf install -y \
+ gcc \
+ make \
+ vim \
+ wget
 
 ARG USERNAME=${DOCKER_USERNAME}
 ARG GROUPNAME=${DOCKER_USERNAME}
