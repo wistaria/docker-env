@@ -1,8 +1,9 @@
 #!/bin/sh
 
 OS="debian"
+TAG="latest"
 DENV="docker-env"
-BASE="${OS}:latest"
+BASE="${OS}:${TAG}"
 IMAGE="${DENV}-${OS}"
 CONTAINER="${IMAGE}_1"
 VOLUME="${DENV}_1"
@@ -16,13 +17,15 @@ if [ ${RES} = 0 ]; then :; else
   exit 1
 fi
 
-# check X server
+# configurations
 CONFIG=""
+
+# check X server
 if [ -x /opt/X11/bin/xlsclients ]; then
   echo "Starting Xquartz..."
   xlsclients > /dev/null
   xhost + localhost > /dev/null
-  CONFIG="--env DISPLAY=host.docker.internal:0"
+  CONFIG="${CONFIG} --env DISPLAY=host.docker.internal:0"
 else
   echo "Warning: Xquartz is not installed."
 fi
@@ -33,11 +36,11 @@ if [ -z ${RES} ]; then
   BUILD_IMAGE=1
 fi
 
-DOCKER_USERNAME=$(id -un)
-DOCKER_HOME=/home/${DOCKER_USERNAME}
-DOCKER_UID=$(id -u)
-DOCKER_GID=$(id -g)
-DOCKER_HOSTNAME="${OS}"
+D_USERNAME=$(id -un)
+D_HOME=/home/${D_USERNAME}
+D_UID=$(id -u)
+D_GID=$(id -g)
+D_HOSTNAME="${OS}"
 
 # build image
 if [ ${BUILD_IMAGE} = 1 ]; then
@@ -48,17 +51,14 @@ FROM ${BASE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq \
- && apt-get -y install \
-      build-essential \
-      curl \
-      sudo \
-      vim \
-      wget
+ && apt-get -y upgrade \
+ && apt-get -y install sudo
+# RUN apt-get -y install build-essential curl sudo vim wget
 
-ARG USERNAME=${DOCKER_USERNAME}
-ARG GROUPNAME=${DOCKER_USERNAME}
-ARG UID=${DOCKER_UID}
-ARG GID=${DOCKER_GID}
+ARG USERNAME=${D_USERNAME}
+ARG GROUPNAME=${D_USERNAME}
+ARG UID=${D_UID}
+ARG GID=${D_GID}
 ARG PASSWORD=docker
 RUN groupadd -f -g \$GID \$GROUPNAME \
  && useradd -m -s /bin/bash -u \$UID -g \$GID \$USERNAME \
@@ -76,24 +76,33 @@ echo "Docker image: ${IMAGE} (${IMAGE_ID})"
 # start container
 CONTAINER_ID=$(docker ps --all --filter "name=${CONTAINER}" --format "{{.ID}}")
 if [ -z ${CONTAINER_ID} ]; then
-  echo "Starting container ${CONTAINER}..."
-  if [ -d "${HOME}/.ssh" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/.ssh:${DOCKER_HOME}/.ssh:ro"
+  # configuration for share folders
+  if [ -d "${HOME}/.ssh-docker" ]; then
+    CONFIG="${CONFIG} -v ${HOME}/.ssh-docker:${D_HOME}/.ssh:ro"
+  elif [ -d "${HOME}/.ssh" ]; then
+    CONFIG="${CONFIG} -v ${HOME}/.ssh:${D_HOME}/.ssh:ro"
   fi
   if [ -d "${HOME}/share" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/share:${DOCKER_HOME}/share"
+    CONFIG="${CONFIG} -v ${HOME}/share:${D_HOME}/share"
   fi
   if [ -d "${HOME}/development" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/development:${DOCKER_HOME}/development"
+    CONFIG="${CONFIG} -v ${HOME}/development:${D_HOME}/development"
   fi
   if [ -d "${HOME}/.config/git" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/.config/git:${DOCKER_HOME}/.config/git:ro"
+    CONFIG="${CONFIG} -v ${HOME}/.config/git:${D_HOME}/.config/git:ro"
   elif [ -f "${HOME}/.gitconfig" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/.gitconfig:${DOCKER_HOME}/.gitconfig:ro"
+    CONFIG="${CONFIG} -v ${HOME}/.gitconfig:${D_HOME}/.gitconfig:ro"
   fi
-  docker run -it --detach-keys='ctrl-e,e' --name "${CONTAINER}" --hostname ${DOCKER_HOSTNAME} ${CONFIG} --volume ${VOLUME}:${DOCKER_HOME} --user ${DOCKER_UID}:${DOCKER_GID} ${IMAGE} /bin/bash
+  # configuration for sshd
+  CONFIG="${CONFIG} --publish 22:22"
+  # configuration for httpd
+  CONFIG="${CONFIG} --publish 80:80"
+  CONFIG="${CONFIG} --publish 443:443"
+  # start container
+  echo "Starting container ${CONTAINER}..."
+  docker run -it --detach-keys='ctrl-e,e' --name "${CONTAINER}" --hostname ${D_HOSTNAME} ${CONFIG} --volume ${VOLUME}:${D_HOME} --user ${D_UID}:${D_GID} ${IMAGE} /bin/bash
 else
-  echo "Docker container: ${CONTAINER} (${CONTAINER_ID})"
+  echo "Restarting container: ${CONTAINER} (${CONTAINER_ID})"
   docker restart ${CONTAINER_ID} > /dev/null
   docker attach --detach-keys='ctrl-e,e' ${CONTAINER_ID}
 fi
