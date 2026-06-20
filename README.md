@@ -1,11 +1,13 @@
 # docker-env
 
+[English](README.md) | [日本語](README-ja.md)
+
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![Shell](https://img.shields.io/badge/Shell-POSIX-4EAA25?logo=gnu-bash&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-test%20environments-FCC624?logo=linux&logoColor=black)
 ![macOS](https://img.shields.io/badge/macOS-XQuartz%20optional-000000?logo=apple&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/author-Synge%20Todo-blue)](https://github.com/wistaria)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 A collection of scripts for quickly launching Linux distribution environments as Docker containers and logging in from the command line.
 
@@ -105,7 +107,6 @@ Each container publishes the following ports to the host.
 
 ```text
 .
-├── LICENSE
 ├── README.md
 ├── README-jp.md
 ├── archlinux.sh
@@ -141,7 +142,3 @@ Removing the volume also deletes files saved in container home directories.
 ## Contributing
 
 Issues and pull requests are welcome. When adding a new distribution, follow the existing scripts for naming conventions, user creation, mounts, and port settings.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
