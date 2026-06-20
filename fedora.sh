@@ -74,20 +74,22 @@ echo "Docker image: ${IMAGE} (${IMAGE_ID})"
 CONTAINER_ID=$(docker ps --all --filter "name=${CONTAINER}" --format "{{.ID}}")
 if [ -z ${CONTAINER_ID} ]; then
   echo "Starting container ${CONTAINER}..."
-  if [ -d "${HOME}/.ssh" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/.ssh:${DOCKER_HOME}/.ssh:ro"
+  if [ -d "${HOME}/.ssh-docker" ]; then
+    CONFIG="${CONFIG} -v ${HOME}/.ssh-docker:${DOCKER_HOME}/.ssh:ro"
   fi
   if [ -d "${HOME}/share" ]; then
     CONFIG="${CONFIG} -v ${HOME}/share:${DOCKER_HOME}/share"
-  fi
-  if [ -d "${HOME}/development" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/development:${DOCKER_HOME}/development"
   fi
   if [ -d "${HOME}/.config/git" ]; then
     CONFIG="${CONFIG} -v ${HOME}/.config/git:${DOCKER_HOME}/.config/git:ro"
   elif [ -f "${HOME}/.gitconfig" ]; then
     CONFIG="${CONFIG} -v ${HOME}/.gitconfig:${DOCKER_HOME}/.gitconfig:ro"
   fi
+  # configuration for sshd
+  CONFIG="${CONFIG} --publish 8022:22"
+  # configuration for httpd
+  CONFIG="${CONFIG} --publish 8080:80"
+  CONFIG="${CONFIG} --publish 8443:443"
   docker run -it --detach-keys='ctrl-e,e' --name "${CONTAINER}" --hostname ${DOCKER_HOSTNAME} ${CONFIG} --volume ${VOLUME}:${DOCKER_HOME} --user ${DOCKER_UID}:${DOCKER_GID} ${IMAGE} /bin/bash
 else
   echo "Docker container: ${CONTAINER} (${CONTAINER_ID})"

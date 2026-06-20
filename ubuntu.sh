@@ -79,14 +79,9 @@ if [ -z ${CONTAINER_ID} ]; then
   # configuration for share folders
   if [ -d "${HOME}/.ssh-docker" ]; then
     CONFIG="${CONFIG} -v ${HOME}/.ssh-docker:${D_HOME}/.ssh:ro"
-  elif [ -d "${HOME}/.ssh" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/.ssh:${D_HOME}/.ssh:ro"
   fi
   if [ -d "${HOME}/share" ]; then
     CONFIG="${CONFIG} -v ${HOME}/share:${D_HOME}/share"
-  fi
-  if [ -d "${HOME}/development" ]; then
-    CONFIG="${CONFIG} -v ${HOME}/development:${D_HOME}/development"
   fi
   if [ -d "${HOME}/.config/git" ]; then
     CONFIG="${CONFIG} -v ${HOME}/.config/git:${D_HOME}/.config/git:ro"
@@ -94,10 +89,10 @@ if [ -z ${CONTAINER_ID} ]; then
     CONFIG="${CONFIG} -v ${HOME}/.gitconfig:${D_HOME}/.gitconfig:ro"
   fi
   # configuration for sshd
-  CONFIG="${CONFIG} --publish 22:22"
+  CONFIG="${CONFIG} --publish 8022:22"
   # configuration for httpd
-  CONFIG="${CONFIG} --publish 80:80"
-  CONFIG="${CONFIG} --publish 443:443"
+  CONFIG="${CONFIG} --publish 8080:80"
+  CONFIG="${CONFIG} --publish 8443:443"
   # start container
   echo "Starting container ${CONTAINER}..."
   docker run -it --detach-keys='ctrl-e,e' --name "${CONTAINER}" --hostname ${D_HOSTNAME} ${CONFIG} --volume ${VOLUME}:${D_HOME} --user ${D_UID}:${D_GID} ${IMAGE} /bin/bash
